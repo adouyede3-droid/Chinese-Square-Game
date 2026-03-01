@@ -49,17 +49,19 @@ for i in range(3):
     for j in range(3):
         if cols[j].button(st.session_state.board[i][j] or " ", key=f"{i}{j}"):
             if not st.session_state.game_over and st.session_state.board[i][j] == "":
-                if st.session_state.player == "X" and st.session_state.counter_x < 3:
-                    st.session_state.board[i][j] = st.session_state.player
-                    st.session_state.counter_x += 1
-                    
-                elif st.session_state.player == "O" and st.session_state.counter_o < 3:
-                    st.session_state.board[i][j] = st.session_state.clear
-                    st.session_state.counter_o += 1
-                    
+                st.session_state.board[i][j] = st.session_state.player
                 if check_winner(st.session_state.board) == True:
-                    st.success(f"🎊 {Joueur_actuel} a gagné !")
-                    st.session_state.game_over = True
+                    @st.dialog("Vainqueur 🎉")
+                    def show_dialog():
+                        st.success(f"🎊 {Joueur_actuel} a gagné !")
+                        #Boutton pour recommencer le jeu
+                        Restart = st.button("Reprendre le jeu")
+                        if Restart:
+                            st.session_state.board = np.full((3, 3), "")
+                            st.session_state.player = "X"
+                            st.session_state.game_over = False
+                            st.rerun()
+                    show_dialog()
                 else:
                     # Changer de joueur
                     if st.session_state.player == "X":
