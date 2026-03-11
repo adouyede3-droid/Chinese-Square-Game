@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 
 
-st.header("Carré Chinois")
+st.header("Morpion Game")
 #Pour recommencer tout le jeu
 def reset_variables():
     st.session_state.board = np.full((3, 3), "")
