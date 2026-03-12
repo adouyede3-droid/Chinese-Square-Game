@@ -144,3 +144,4 @@ st.experimental_rerun()
 Restart = st.button("Reprendre le jeu")
 if Restart:
     reset_variables()
+
