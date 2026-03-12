@@ -10,6 +10,7 @@ def reset_variables():
     st.session_state.game_over = False
     st.session_state.selected_piece = None
     st.session_state.phase = "placement"    #placement revient à mouvement
+    st.session_state.winning_line = None
     st.rerun()
 if "board" not in st.session_state:
     reset_variables()
@@ -30,17 +31,17 @@ def player_name()-> str:
 st.write(f"Joueur actuel : {player_name()}")
 
 #Création de la fonction qui vérifie qui a gagné
-def check_winner(M)-> bool:
+def check_winner(M)-> tuple[bool, list]:
     for i in range(3):
         if all(M[i, :] == M[i, 0]) and M[i, 0] != "":
-            return True
+            return True, [(i, 0), (i, 1), (i, 2)]
         if all(M[:, i] == M[0, i]) and M[0, i] != "":
-            return True
+            return True, [(0, i), (1, i), (2, i)]
     if all(np.diag(M) == M[0, 0]) and M[0, 0] != "":
-        return True
+        return True, [(0, 0), (1, 1), (2, 2)]
     if all(np.diag(np.fliplr(M)) == M[0, 2]) and M[0, 2] != "":
-        return True
-    return False
+        return True, [(0, 2), (1, 1), (2, 0)]
+    return False, []
 
 # Dictionnaire des voisins autorisés (déplacements le long des lignes)
 ADJACENCY = {
@@ -83,8 +84,10 @@ def on_cell_click(i: int, j: int) -> None:
     if st.session_state.phase == "placement":
         if board[i][j] == "" and count_pieces(player) < 3:
             board[i][j] = player
-            if check_winner(board) == True:
+            is_winner, winning_line = check_winner(board)
+            if is_winner == True:
                 st.session_state.game_over = True
+                st.session_state.winning_line = winning_line
             else:
                 change_player()
         if count_pieces("X") == 3 and count_pieces("O") == 3:
@@ -102,19 +105,31 @@ def on_cell_click(i: int, j: int) -> None:
         if validate_movement(selected, (i, j)) == True:
             board[selected[0]][selected[1]] = ""
             board[i][j] = player
-            if check_winner(board) == True:
+            is_winner, winning_line = check_winner(board)
+            if is_winner == True:
                 st.session_state.game_over = True
                 st.session_state.selected_piece = None
+                st.session_state.winning_line = winning_line
             else:
                 change_player()
     st.rerun()
+
 # Création de la grille
 for i in range(3):
     cols = st.columns(3)
     for j in range(3):
-        if cols[j].button(st.session_state.board[i][j] or " ", key=f"{i}{j}"):
-            on_cell_click(i, j)
-            st.rerun()
+        is_winning_cell = st.session_state.winning_line and (i, j) in st.session_state.winning_line
+        button_text = st.session_state.board[i][j] or " "
+        
+        if is_winning_cell:
+            if cols[j].button(f"✨ {button_text} ✨", key=f"{i}{j}", use_container_width=True):
+                on_cell_click(i, j)
+                st.rerun()
+        else:
+            if cols[j].button(button_text, key=f"{i}{j}", use_container_width=True):
+                on_cell_click(i, j)
+                st.rerun()
+
 #Dialogue du vainqueur
 if st.session_state.game_over == True:
     @st.dialog("Vainqueur 🎉")
@@ -135,6 +150,7 @@ if st.session_state.game_over == True:
         if Quitter:
             st.warning('Vous pouvez fermer cet onglet')
     show_dialog()
+
 # Affichage tableau
 st.write("Plateau actuel :")
 st.write(st.session_state.board)
@@ -144,4 +160,3 @@ st.experimental_rerun()
 Restart = st.button("Reprendre le jeu")
 if Restart:
     reset_variables()
-
