@@ -118,17 +118,11 @@ def on_cell_click(i: int, j: int) -> None:
 for i in range(3):
     cols = st.columns(3)
     for j in range(3):
-        is_winning_cell = st.session_state.winning_line and (i, j) in st.session_state.winning_line
         button_text = st.session_state.board[i][j] or " "
         
-        if is_winning_cell:
-            if cols[j].button(f"✨ {button_text} ✨", key=f"{i}{j}", use_container_width=True):
-                on_cell_click(i, j)
-                st.rerun()
-        else:
-            if cols[j].button(button_text, key=f"{i}{j}", use_container_width=True):
-                on_cell_click(i, j)
-                st.rerun()
+        if cols[j].button(button_text, key=f"{i}{j}", use_container_width=True):
+            on_cell_click(i, j)
+            st.rerun()
 
 #Dialogue du vainqueur
 if st.session_state.game_over == True:
@@ -151,10 +145,23 @@ if st.session_state.game_over == True:
             st.warning('Vous pouvez fermer cet onglet')
     show_dialog()
 
-# Affichage tableau
+# Affichage tableau avec bordure verte pour la ligne gagnante
 st.write("Plateau actuel :")
-st.write(st.session_state.board)
-st.experimental_rerun()
+
+# Création d'un tableau HTML stylisé
+html_table = "<table style='border-collapse: collapse; width: 200px;'>"
+for i in range(3):
+    html_table += "<tr>"
+    for j in range(3):
+        cell_value = st.session_state.board[i][j] or " "
+        is_winning_cell = st.session_state.winning_line and (i, j) in st.session_state.winning_line
+        
+        border_style = "border: 4px solid green;" if is_winning_cell else "border: 1px solid black;"
+        html_table += f"<td style='{border_style} text-align: center; padding: 20px; font-size: 24px; font-weight: bold;'>{cell_value}</td>"
+    html_table += "</tr>"
+html_table += "</table>"
+
+st.markdown(html_table, unsafe_allow_html=True)
 
 #Boutton pour recommencer le jeu
 Restart = st.button("Reprendre le jeu")
